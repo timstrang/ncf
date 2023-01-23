@@ -18,16 +18,19 @@ def get_args():
 def action(x, L_fn, dt):
     xdot = (x[1:] - x[:-1]) / dt
     xdot = torch.cat([xdot, xdot[-1:]], axis=0)
-    return L_fn(x, xdot).sum()
+    T, V = L_fn(x, xdot)
+    return T-V, T, V
 
 def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15):
     t = np.linspace(0, len(path.x)-1, len(path.x)) * dt
     optimizer = torch.optim.SGD(path.parameters(), lr=step_size, momentum=0) if opt=='sgd' else \
                 torch.optim.Adam(path.parameters(), lr=step_size)
     xs = [path.x.clone().data]
+    info = {'S' : [], 'T' : [], 'V' : []}
     t0 = time.time()
     for i in range(steps):
-        S = action(path.x, L_fn, dt)
+        S, T, V = action(path.x, L_fn, dt)
+        info['S'].append(S.item()) ; info['T'].append(T.item()) ; info['V'].append(V.item())
         S.backward() ; path.x.grad.data[[0,-1]] *= 0
         optimizer.step() ; path.zero_grad()
 
@@ -35,7 +38,7 @@ def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15)
             xs.append(path.x.clone().data)
             print('step={:04d}, S={:.3e} J*s, dt={:.1f}s'.format(i, S.item(), time.time()-t0))
             t0 = time.time()
-    return t, path, xs
+    return t, path, xs, info
 
 class PerturbedPath(torch.nn.Module):
     def __init__(self, x_true, N, sigma=0, shift=False, zero_basepath=False, coords=2, is_ephemeris=False):
@@ -57,5 +60,4 @@ class PerturbedPath(torch.nn.Module):
 
 
 if __name__ == "__main__":
-    args = get_args()
-    logging_loop(args)
+    print('TODO @sam @tim implement this function so all experiments can be reproduced from the command line')

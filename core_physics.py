@@ -117,34 +117,42 @@ def simulate_planets(df, planets, dt=24*60*60, steps=365-300):
 
 def lagrangian_freebody(x, xdot, m=1):
     norm_factor = x.shape[0]
-    return ((.5*m*xdot**2).sum() - V_freebody(x.reshape(-1, 1)).sum()) / norm_factor
+    T = (.5*m*xdot**2).sum() / norm_factor
+    V = V_freebody(x.reshape(-1, 1)).sum() / norm_factor
+    return T, V
 
 def lagrangian_pend(x, xdot, m=1):
     norm_factor = x.shape[0]
-    return (T_pend(xdot).sum() - V_pend(x).sum()) / norm_factor
+    return T_pend(xdot).sum() / norm_factor, V_pend(x).sum() / norm_factor
 
 def lagrangian_dblpend(x, xdot, m=1):
     norm_factor = x.shape[0]
-    return (T_dblpend(x, xdot).sum() - V_dblpend(x).sum()) / norm_factor
+    T = T_dblpend(x, xdot).sum() / norm_factor
+    V = V_dblpend(x).sum() / norm_factor
+    return T, V
 
 def lagrangian_3body(x, xdot, m=1):
     N = x.shape[-1] // 2
     norm_factor = x.shape[0]*N
-    return ((.5*m*xdot**2).sum() - V_3body(x.reshape(-1, N, 2)).sum()) / norm_factor
+    T = (.5*m*xdot**2).sum() / norm_factor
+    V = V_3body(x.reshape(-1, N, 2)).sum() / norm_factor
+    return T, V
 
 def lagrangian_gas(x, xdot, m=1):
     N = x.shape[-1] // 2
     norm_factor = x.shape[0]*N
-    return ((.5*m*xdot**2).sum() -V_gas(x.reshape(-1, N, 2)).sum()) / norm_factor
+    T = (.5*m*xdot**2).sum() / norm_factor
+    V = V_gas(x.reshape(-1, N, 2)).sum() / norm_factor
+    return T, V
 
 def lagrangian_planets(x, xdot, masses):
     N = x.shape[-1] // 2
     norm_factor = x.shape[0]*N
     xdot = xdot.reshape(-1,N,2)
-    m = torch.tensor(masses[None,:,:]) # should be shape [1,N,1]
-    T = (.5*m*xdot**2).sum()
-    V = V_planets(x.reshape(-1, N, 2), masses).sum()
-    return (T - V) / norm_factor
+    m = torch.tensor(masses[None,:,:]) # should be ofshape [1,N,1]
+    T = (.5*m*xdot**2).sum() / norm_factor
+    V = V_planets(x.reshape(-1, N, 2), masses).sum() / norm_factor
+    return T, V
 
 
 ############################# POTENTIAL FUNCTIONS #############################
