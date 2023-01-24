@@ -5,12 +5,12 @@ import torch, time, argparse
 from core_physics import *
 from utils import *
 
-def get_args():
-    parser = argparse.ArgumentParser(description=None)
-    parser.add_argument('--logfile', default='paxg.csv', type=str, help='file where price data is written')
-    parser.add_argument('--interval', default=10, type=int, help='logging interval (seconds)')
-    parser.add_argument('--verbose', default=False, type=bool, help='print to terminal while running?')
-    return parser.parse_args()
+# def get_args():
+#     parser = argparse.ArgumentParser(description=None)
+#     parser.add_argument('--logfile', default='paxg.csv', type=str, help='file where price data is written')
+#     parser.add_argument('--interval', default=10, type=int, help='logging interval (seconds)')
+#     parser.add_argument('--verbose', default=False, type=bool, help='print to terminal while running?')
+#     return parser.parse_args()
 
 
 ############################# MINIMIZING THE ACTION #############################
@@ -19,7 +19,7 @@ def action(x, L_fn, dt):
     xdot = (x[1:] - x[:-1]) / dt
     xdot = torch.cat([xdot, xdot[-1:]], axis=0)
     T, V = L_fn(x, xdot)
-    return T-V, T, V
+    return T.sum()-V.sum(), T, V
 
 def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15):
     t = np.linspace(0, len(path.x)-1, len(path.x)) * dt
@@ -30,7 +30,7 @@ def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15)
     t0 = time.time()
     for i in range(steps):
         S, T, V = action(path.x, L_fn, dt)
-        info['S'].append(S.item()) ; info['T'].append(T.item()) ; info['V'].append(V.item())
+        info['S'].append(S.item()) ; info['T'].append(T.sum().item()) ; info['V'].append(V.sum().item())
         S.backward() ; path.x.grad.data[[0,-1]] *= 0
         optimizer.step() ; path.zero_grad()
 

@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import torch, os
 from celluloid import Camera
-    
+
 
 ############################# PLOTTING UTILITIES #############################
 
