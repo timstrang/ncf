@@ -117,13 +117,13 @@ def simulate_planets(df, planets, dt=24*60*60, steps=365-300):
 
 def lagrangian_freebody(x, xdot, m=1):
     norm_factor = x.shape[0]
-    T = (.5*m*xdot**2).sum() / norm_factor
+    T = (.5*m*xdot**2) / norm_factor
     V = V_freebody(x.reshape(-1, 1)) / norm_factor
     return T, V
 
 def lagrangian_pend(x, xdot, m=1):
     norm_factor = x.shape[0]
-    return T_pend(xdot).sum() / norm_factor, V_pend(x) / norm_factor
+    return T_pend(xdot) / norm_factor, V_pend(x) / norm_factor
 
 def lagrangian_dblpend(x, xdot, m=1):
     norm_factor = x.shape[0]
@@ -158,7 +158,7 @@ def lagrangian_planets(x, xdot, masses):
 ############################# POTENTIAL FUNCTIONS #############################
 
 def V_freebody(xs): # assume xs measured on vertical axis
-    return xs.sum()
+    return xs
 
 def V_pend(x, m=1, l=150, g=1):
     return -m*l*g*(torch.cos(x) - 1)
