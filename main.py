@@ -21,7 +21,7 @@ def action(x, L_fn, dt):
     T, V = L_fn(x, xdot)
     return T.sum()-V.sum(), T, V
 
-def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15):
+def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15, verbose=True):
     t = np.linspace(0, len(path.x)-1, len(path.x)) * dt
     optimizer = torch.optim.SGD(path.parameters(), lr=step_size, momentum=0) if opt=='sgd' else \
                 torch.optim.Adam(path.parameters(), lr=step_size)
@@ -36,16 +36,17 @@ def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15)
 
         if i % (steps//print_every) == 0:
             xs.append(path.x.clone().data)
-            print('step={:04d}, S={:.3e} J*s, dt={:.1f}s'.format(i, S.item(), time.time()-t0))
+            if verbose:
+                print('step={:04d}, S={:.3e} J*s, dt={:.1f}s'.format(i, S.item(), time.time()-t0))
             t0 = time.time()
     return t, path, xs, info
 
 class PerturbedPath(torch.nn.Module):
-    def __init__(self, x_true, N, sigma=0, shift=False, zero_basepath=False, coords=2, is_ephemeris=False):
+    def __init__(self, x_true, N, sigma=0, shift=False, zero_basepath=False, coords=2, is_ephemeris=False, clip_rng=1):
         super(PerturbedPath, self).__init__()
         np.random.seed(0)
         self.x_true = x_true
-        x_noise = sigma*np.random.randn(*x_true.shape).clip(-1,1)
+        x_noise = sigma*np.random.randn(*x_true.shape).clip(-clip_rng, clip_rng)
         x_noise[:1] = x_noise[-1:] = 0
         if is_ephemeris:
             x_noise[:,0,:] = 0 # don't perturb the Sun
