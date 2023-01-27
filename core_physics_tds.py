@@ -38,10 +38,15 @@ def simulate_freebody(dt=0.25, steps=60):
     accel_fn = lambda x, xdot: accelerations(torch.tensor(x), None, potential_fn=V_freebody).numpy()
     return solve_ode_euler(x0, x1, dt, accel_fn, steps=steps, box_width=100)
 
+def radial2cartesian_pend(theta, l=1):
+    x1 = l * np.sin(theta)
+    y1 = -l * np.cos(theta)
+    return np.stack([x1, y1]).T.reshape(-1,1,2)/5 + 0.5
+
 def simulate_pend(dt=1):
     np.random.seed(1)
-    x0, x1 = np.asarray([np.pi/2.]), np.asarray([np.pi/2.])
-    def pend_accel_fn(x, xdot, g=1, m=1, l=150):
+    x0, x1 = np.asarray([np.pi/2]), np.asarray([np.pi/2])
+    def pend_accel_fn(x, xdot, g=1, m=1, l=180):
         f = -g / l * np.sin(x)
         return f/m
     return solve_ode_euler(x0, x1, dt, pend_accel_fn)
@@ -62,7 +67,7 @@ def dblpend_accel_fn(x, xdot, m1=1, m2=1, l1=1, l2=1, g=1):
     forces = np.asarray([z1dot, z2dot])
     return forces / 1 # (F/m=a)
 
-def radial2cartesian(thetas, l1=1, l2=1): # Convert from radial to Cartesian coordinates.
+def radial2cartesian_dblpend(thetas, l1=1, l2=1): # Convert from radial to Cartesian coordinates.
     t1, t2 = thetas.T
     x1 = l1 * np.sin(t1)
     y1 = -l1 * np.cos(t1)

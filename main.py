@@ -2,7 +2,7 @@
 
 import numpy as np
 import torch, time, argparse
-from core_physics import *
+from core_physics_tds import *
 from utils import *
 
 # def get_args():
