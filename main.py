@@ -21,7 +21,7 @@ def action(x, L_fn, dt):
     T, V = L_fn(x, xdot)
     return T.sum()-V.sum(), T, V
 
-def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15, verbose=True):
+def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_updates=15, verbose=True):
     t = np.linspace(0, len(path.x)-1, len(path.x)) * dt
     optimizer = torch.optim.SGD(path.parameters(), lr=step_size, momentum=0) if opt=='sgd' else \
                 torch.optim.Adam(path.parameters(), lr=step_size)
@@ -34,7 +34,7 @@ def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_every=15,
         S.backward() ; path.x.grad.data[[0,-1]] *= 0
         optimizer.step() ; path.zero_grad()
 
-        if i % (steps//print_every) == 0:
+        if print_updates > 0 and i % (steps//print_updates) == 0:
             xs.append(path.x.clone().data)
             if verbose:
                 print('step={:04d}, S={:.3e} J*s, dt={:.1f}s'.format(i, S.item(), time.time()-t0))

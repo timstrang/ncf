@@ -207,3 +207,4 @@ def V_planets(xs, masses, eps=1e-10, G=6.67e-11): # # 2e-25
         mM_matrix = torch.tensor( masses.T * masses )
         U_vals = G * mM_matrix[ixs] / dist_matrix[ixs]
         return -U_vals.sum()
+        
