@@ -2,7 +2,7 @@
 
 import numpy as np
 import torch, time, argparse
-from core_physics_tds import *
+from core_physics import *
 from utils import *
 
 # def get_args():
@@ -21,7 +21,7 @@ def action(x, L_fn, dt):
     T, V = L_fn(x, xdot)
     return T.sum()-V.sum(), T, V
 
-def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_updates=15, verbose=True):
+def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_updates=15, e_coeff=0, verbose=True):
     t = np.linspace(0, len(path.x)-1, len(path.x)) * dt
     optimizer = torch.optim.SGD(path.parameters(), lr=step_size, momentum=0) if opt=='sgd' else \
                 torch.optim.Adam(path.parameters(), lr=step_size)
@@ -31,23 +31,28 @@ def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_updates=1
     for i in range(steps):
         S, T, V = action(path.x, L_fn, dt)
         info['S'].append(S.item()) ; info['T'].append(T.sum().item()) ; info['V'].append(V.sum().item())
-        S.backward() ; path.x.grad.data[[0,-1]] *= 0
+        #E_loss = e_coeff * ((T[0] + V[0]) - (T + V).mean()).pow(2).mean() # gentler version
+        E_loss = e_coeff * ((T[0] + V[0]) - (T + V)).pow(2).mean()
+        loss = S + E_loss
+        loss.backward() ; path.x.grad.data[[0,-1]] *= 0
         optimizer.step() ; path.zero_grad()
 
         if print_updates > 0 and i % (steps//print_updates) == 0:
             xs.append(path.x.clone().data)
             if verbose:
-                print('step={:04d}, S={:.3e} J*s, dt={:.1f}s'.format(i, S.item(), time.time()-t0))
+                print('step={:04d}, S={:.3e} J*s, E_loss={:.3e}, dt={:.1f}s'\
+                      .format(i, S.item(), E_loss.item(), time.time()-t0))
             t0 = time.time()
     return t, path, xs, info
 
 class PerturbedPath(torch.nn.Module):
-    def __init__(self, x_true, N, sigma=0, shift=False, zero_basepath=False, coords=2, is_ephemeris=False, clip_rng=1):
+    def __init__(self, x_true, N, sigma=0, shift=False, zero_basepath=False,
+                    coords=2, is_ephemeris=False, clip_rng=1, k = 3):
         super(PerturbedPath, self).__init__()
         np.random.seed(0)
         self.x_true = x_true
         x_noise = sigma*np.random.randn(*x_true.shape).clip(-clip_rng, clip_rng)
-        x_noise[:1] = x_noise[-1:] = 0
+        x_noise[:k] = x_noise[-k:] = 0
         if is_ephemeris:
             x_noise[:,0,:] = 0 # don't perturb the Sun
         x_basepath = np.copy(x_true)
