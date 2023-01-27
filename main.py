@@ -27,12 +27,15 @@ def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_updates=1
                 torch.optim.Adam(path.parameters(), lr=step_size)
     xs = [path.x.clone().data]
     info = {'S' : [], 'T' : [], 'V' : []}
+    with torch.no_grad():
+        S, T, V = action(path.x, L_fn, dt)
+    E0 = T[0] + V[0]
     t0 = time.time()
     for i in range(steps):
         S, T, V = action(path.x, L_fn, dt)
         info['S'].append(S.item()) ; info['T'].append(T.sum().item()) ; info['V'].append(V.sum().item())
-        #E_loss = e_coeff * ((T[0] + V[0]) - (T + V).mean()).pow(2).mean() # gentler version
-        E_loss = e_coeff * ((T[0] + V[0]) - (T + V)).pow(2).mean()
+        #E_loss = e_coeff * (E0 - (T + V).mean()).pow(2).mean() # gentler version
+        E_loss = e_coeff * (E0 - (T + V)).pow(2).mean()
         loss = S + E_loss
         loss.backward() ; path.x.grad.data[[0,-1]] *= 0
         optimizer.step() ; path.zero_grad()

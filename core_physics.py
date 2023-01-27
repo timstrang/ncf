@@ -75,10 +75,10 @@ def radial2cartesian_dblpend(thetas, l1=1, l2=1): # Convert from radial to Carte
     y2 = y1 - l2 * np.cos(t2)
     return np.stack([x1, y1, x2, y2]).T.reshape(-1,2,2)/5 + 0.6
 
-def simulate_dblpend(dt=1):
+def simulate_dblpend(dt=1, steps=200):
     np.random.seed(1)
     x0 = np.asarray([3*np.pi/7, 3*np.pi/4]) ; x1 = np.copy(x0)
-    return solve_ode_euler(x0, x1, dt, dblpend_accel_fn)
+    return solve_ode_euler(x0, x1, dt, dblpend_accel_fn, steps=steps)
 
 
 #--------------- 3 body and gas simulations ---------------#
