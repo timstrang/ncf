@@ -29,7 +29,7 @@ def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_updates=1
     info = {'S' : [], 'T' : [], 'V' : []}
     with torch.no_grad():
         S, T, V = action(path.x, L_fn, dt)
-    E0 = T[0] + V[0]
+    E0 = T[0] + V[0] if len(T.shape) > 0 else (T + V).item()
     t0 = time.time()
     for i in range(steps):
         S, T, V = action(path.x, L_fn, dt)
