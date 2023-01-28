@@ -75,18 +75,22 @@ def radial2cartesian_dblpend(thetas, l1=1, l2=1): # Convert from radial to Carte
     y2 = y1 - l2 * np.cos(t2)
     return np.stack([x1, y1, x2, y2]).T.reshape(-1,2,2)/5 + 0.6
 
-def simulate_dblpend(dt=1):
+def simulate_dblpend(dt=1, steps=200):
     np.random.seed(1)
     x0 = np.asarray([3*np.pi/7, 3*np.pi/4]) ; x1 = np.copy(x0)
-    return solve_ode_euler(x0, x1, dt, dblpend_accel_fn)
+    return solve_ode_euler(x0, x1, dt, dblpend_accel_fn, steps=steps)
 
 
 #--------------- 3 body and gas simulations ---------------#
 
-def simulate_3body(dt=0.5, steps=100):
+def simulate_3body(dt=0.5, steps=100, stable_config=True):
     np.random.seed(1)
-    x0 = np.asarray([[0.4, 0.3], [0.4, 0.7], [0.7, 0.5]])
-    v0 = np.asarray([[0.017, -0.006], [-.012, -.012], [0.0, 0.017]])
+    if stable_config:
+        x0 = np.asarray([[0.4, 0.3], [0.4, 0.7], [0.7, 0.5]])
+        v0 = np.asarray([[0.017, -0.006], [-.012, -.012], [0.0, 0.017]])
+    else:
+        x0 = np.asarray([[0.4, 0.3], [0.4, 0.7], [0.7, 0.5]])
+        v0 = np.asarray([[0.017, -0.006], [-.012, -.012], [0.002, 0.017]])
     x1 = x0 + dt*v0
     accel_fn = lambda x, xdot: accelerations(torch.tensor(x), None, potential_fn=V_3body).numpy()
     return solve_ode_euler(x0, x1, dt, accel_fn, steps=steps)
@@ -137,6 +141,7 @@ def lagrangian_dblpend(x, xdot, m=1):
     return T, V
 
 def lagrangian_3body(x, xdot, m=1):
+    x = x.reshape(x.shape[0], -1)
     N = x.shape[-1] // 2
     norm_factor = x.shape[0]*N
     T = (.5*m*xdot**2).sum() / norm_factor
