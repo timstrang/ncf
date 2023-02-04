@@ -34,8 +34,8 @@ def minimize_action(path, steps, step_size, L_fn, dt, opt='sgd', print_updates=1
     for i in range(steps):
         S, T, V = action(path.x, L_fn, dt)
         info['S'].append(S.item()) ; info['T'].append(T.sum().item()) ; info['V'].append(V.sum().item())
-        #E_loss = e_coeff * (E0 - (T + V).mean()).pow(2).mean() # gentler version
-        E_loss = e_coeff * (E0 - (T + V)).pow(2).mean()
+
+        E_loss = e_coeff * (E0 - (T + V)).pow(2).mean() if e_coeff != 0 else torch.tensor(0.0)
         loss = S + E_loss
         loss.backward() ; path.x.grad.data[[0,-1]] *= 0
         optimizer.step() ; path.zero_grad()
@@ -52,7 +52,7 @@ class PerturbedPath(torch.nn.Module):
     def __init__(self, x_true, N, sigma=0, shift=False, zero_basepath=False,
                     coords=2, is_ephemeris=False, clip_rng=1, k = 3):
         super(PerturbedPath, self).__init__()
-        np.random.seed(0)
+        np.random.seed(1)
         self.x_true = x_true
         x_noise = sigma*np.random.randn(*x_true.shape).clip(-clip_rng, clip_rng)
         x_noise[:k] = x_noise[-k:] = 0
