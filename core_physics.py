@@ -15,7 +15,7 @@ def accelerations(xs, xdot, potential_fn, masses=1, **kwargs):
 
 ############################# CLASSIC EULER ODE SOLVER #############################
 
-def solve_ode_euler(x0, x1, dt, accel_fn, steps=100, box_width=1):
+def solve_ode_euler(x0, x1, dt, accel_fn, steps=100, box_width=1, damping_coeff=1.0):
     xs = [x0, x1]
     ts = [0, dt]
     xdot = (x1 - x0) / dt
@@ -23,6 +23,7 @@ def solve_ode_euler(x0, x1, dt, accel_fn, steps=100, box_width=1):
     for i in range(steps-2):
         a = accel_fn(x, xdot)
         xdot = xdot + a*dt
+        xdot *= damping_coeff
         x = x + xdot*dt
         xs.append(x)
         ts.append(ts[-1]+dt)
@@ -103,6 +104,14 @@ def simulate_gas(dt=1, N=50):
     accel_fn = lambda x, xdot: accelerations(torch.tensor(x), None, potential_fn=V_gas).numpy()
     return solve_ode_euler(x0, x1, dt, accel_fn)
 
+def simulate_LJ(dt=0.2, N=50, damping_coeff=0.9):
+    np.random.seed(1)
+    x0 = np.random.rand(N,2)*.2 + 0.4
+    v0 = np.random.randn(N,2)*.0
+    x1 = x0 + dt*v0
+    accel_fn = lambda x, xdot: accelerations(torch.tensor(x), None, potential_fn=V_LJ).numpy()
+    return solve_ode_euler(x0, x1, dt, accel_fn, damping_coeff=damping_coeff)
+
 
 #--------------- solar system ephemeris ---------------#
 
@@ -164,6 +173,13 @@ def lagrangian_planets(x, xdot, masses):
     V = V_planets(x.reshape(-1, N, 2), masses).sum() / norm_factor
     return T, V
 
+def lagrangian_LJ(x, xdot, m=1):
+    N = x.reshape(x.shape[0],-1).shape[1] // 2
+    norm_factor = x.shape[0]*N
+    T = (.5*m*xdot**2).sum() / norm_factor
+    V = V_LJ(x.reshape(-1, N, 2)).sum() / norm_factor
+    return T, V
+
 
 ############################# POTENTIAL FUNCTIONS #############################
 
@@ -188,7 +204,7 @@ def T_dblpend(x, xdot, m1=1, m2=1, l1=1, l2=1, g=1):
 
 def V_3body(xs, eps=1e-6, overlap_radius=0.05, scale_coeff=1.3e-4):
     if len(xs.shape) > 2:
-        return sum([V_3body(_xs, overlap_radius, scale_coeff) for _xs in xs]) # broadcast
+        return sum([V_3body(_xs, eps, overlap_radius, scale_coeff) for _xs in xs]) # broadcast
     else:
         dist_matrix = ((xs[:,0:1] - xs[:,0:1].T).pow(2) + (xs[:,1:2] - xs[:,1:2].T).pow(2) + eps).sqrt()
         dists = dist_matrix[torch.triu_indices(xs.shape[0], xs.shape[0], 1).split(1)]
@@ -198,7 +214,7 @@ def V_3body(xs, eps=1e-6, overlap_radius=0.05, scale_coeff=1.3e-4):
 
 def V_gas(xs, eps=1e-6, overlap_radius=0.05, scale_coeff=1e-5): # 1e-6 -> 500 particles
     if len(xs.shape) > 2:
-        return sum([V_gas(_xs, overlap_radius, scale_coeff) for _xs in xs]) # broadcast
+        return sum([V_gas(_xs, eps, overlap_radius, scale_coeff) for _xs in xs]) # broadcast
     else:
         dist_matrix = ((xs[:,0:1] - xs[:,0:1].T).pow(2) + (xs[:,1:2] - xs[:,1:2].T).pow(2) + eps).sqrt()
         dists = dist_matrix[torch.triu_indices(xs.shape[0], xs.shape[0], 1).split(1)]
@@ -206,6 +222,18 @@ def V_gas(xs, eps=1e-6, overlap_radius=0.05, scale_coeff=1e-5): # 1e-6 -> 500 pa
         potentials = (dists > 0.5) * (dists < 1-overlap_radius) * 1/(1-dists + eps)  # 1/(1-r) (wraparound)
         potentials += (dists > overlap_radius)* (dists < 0.5) * 1/(dists + eps)  # 1/r
         potentials += (dists < overlap_radius) * (5e2*(overlap_radius - dists) + 1/overlap_radius)  # cap
+        return potentials.sum() * scale_coeff
+
+def V_LJ(xs, eps=1e-6, overlap_radius=0.04, scale_coeff=1e-5, sigma=4e-2): # 1e-6 -> 500 particles
+    if len(xs.shape) > 2:
+        return sum([V_LJ(_xs, eps, overlap_radius, scale_coeff, sigma) for _xs in xs]) # broadcast
+    else:
+        dist_matrix = ((xs[:,0:1] - xs[:,0:1].T).pow(2) + (xs[:,1:2] - xs[:,1:2].T).pow(2) + eps).sqrt()
+        dists = dist_matrix[torch.triu_indices(xs.shape[0], xs.shape[0], 1).split(1)]
+        
+        potentials = 10*( (sigma / dists).pow(12) - (sigma / dists).pow(6) )
+        potentials = potentials.clamp(None, 10)
+        potentials += (dists < overlap_radius) * (1e2*(overlap_radius - dists))
         return potentials.sum() * scale_coeff
 
 def V_planets(xs, masses, eps=1e-10, G=6.67e-11): # # 2e-25
