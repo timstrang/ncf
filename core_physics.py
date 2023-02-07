@@ -149,14 +149,14 @@ def lagrangian_3body(x, xdot, m=1):
     return T, V
 
 def lagrangian_gas(x, xdot, m=1):
-    N = x.shape[-1] // 2
+    N = x.reshape(x.shape[0],-1).shape[1] // 2
     norm_factor = x.shape[0]*N
     T = (.5*m*xdot**2).sum() / norm_factor
     V = V_gas(x.reshape(-1, N, 2)).sum() / norm_factor
     return T, V
 
 def lagrangian_planets(x, xdot, masses):
-    N = x.shape[-1] // 2
+    N = x.reshape(x.shape[0],-1).shape[1] // 2
     norm_factor = x.shape[0]*N
     xdot = xdot.reshape(-1,N,2)
     m = torch.tensor(masses[None,:,:]) # should be ofshape [1,N,1]
