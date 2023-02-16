@@ -1,18 +1,19 @@
 ![logo.png](static/logo.png)
 
-Nature has a cost function. It is a scalar function called the action whose stationary points, often minima, represent physically valid dynamics for any physics problem. Given how fundamental the action is, it is surprising that it is never minimized in a computational setting. The purpose of this work is to explore whether this is possible. We show that, in fact, it is possible and can be used to simulate a body in free fall, a pendulum, a double pendulum, the three body problem, a simple gas, and the planetary ephemerides. In closing, we visualize how multiple paths interfere with one another at the quantum scale, forcing us to take into account many paths at once and giving rise to the path integral formulation of quantum mechanics.
+[Blog post]() | [Paper]() | [Colab notebook]()
+
+In physics, there is a scalar function called the action which behaves like a cost function. When minimized, it yields the "path of least action" which represents the path a physical system will take through space and time. This function is crucial in theoretical physics and is usually minimized analytically to obtain equations of motion for various problems. In this paper, we propose a different approach: instead of minimizing the action analytically, we discretize it and then minimize it directly with gradient descent. We use this approach to obtain dynamics for six different physical systems and show that they are nearly identical to ground-truth dynamics. We discuss failure modes such as the unconstrained energy effect and show how to address them. Finally, we use the discretized action to construct a simple but novel quantum simulation.
+
+![hero.png](static/hero.png)
 
 ## How to run
 
-* Jupyter notebook
-	* Open `main.ipnyb` which is located in this directory
-* Command line
-	* Navigate to the directory containing this README
-	* Run, eg. `python main.py --experiment dblpend`
-	* Note: `--experiment` is one of {`freebody`, `singlepend`, `doublepend`, `threebody`, `gas`, `ephemeris`}
+* Simple tutorial: `tutorial.ipnyb` (located in this directory)
+* Reproduce paper figures: `paper_figures.ipnyb` (located in this directory)
 
 
-## Simulations
+## Six Experiments
+Core physics code can be found in `core_physics.py`.
 
 * Free body
 	* Minimal working example
@@ -23,12 +24,18 @@ Nature has a cost function. It is a scalar function called the action whose stat
 * Three body problem
 	* A chaotic system with sharp nonlinear dynamics and N=6 degrees of freedom
 * Gas simulation
-	* * A chaotic system with sharp nonlinear dynamics and N=400 degrees of freedom
+	* A chaotic system with sharp nonlinear dynamics and N=100 degrees of freedom
 * Ephemeris dataset
 	* A real physics data taken from the JPL Horizons project
 	* One year of orbital data for the sun and the inner planets of the solar system
 	* Orbits are projected onto a 2D plane
 
+![results.png](static/results.png)
+
+## Quantum simulation
+Code for our quantum experiments can be found in `quantum.py`.
+
+![quantum.png](static/quantum.png)
 
 ## Depedencies
 

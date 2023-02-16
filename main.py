@@ -1,16 +1,10 @@
-# Simulation as Optimization | Tim Strang and Sam Greydanus | 2023 | MIT License
+# Nature's Cost Function: Simulating Physics by Minimizing the Action
+# Tim Strang, Isabella Caruso, and Sam Greydanus | 2023 | MIT License
 
 import numpy as np
 import torch, time, argparse
 from core_physics import *
 from utils import *
-
-# def get_args():
-#     parser = argparse.ArgumentParser(description=None)
-#     parser.add_argument('--logfile', default='paxg.csv', type=str, help='file where price data is written')
-#     parser.add_argument('--interval', default=10, type=int, help='logging interval (seconds)')
-#     parser.add_argument('--verbose', default=False, type=bool, help='print to terminal while running?')
-#     return parser.parse_args()
 
 
 ############################# MINIMIZING THE ACTION #############################
@@ -66,7 +60,3 @@ class PerturbedPath(torch.nn.Module):
             self.x_pert[5:-5] = x_pert[5:-5] = x_pert_shift
             print(self.x_pert.shape)
         self.x = torch.nn.Parameter(torch.tensor(x_pert)) # [time, N*2]
-
-
-if __name__ == "__main__":
-    print('TODO @sam @tim implement this function so all experiments can be reproduced from the command line')
