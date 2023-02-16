@@ -1,5 +1,5 @@
 <!-- ![logo.png](static/logo.png) -->
-# Nature's Cost Function: Simulating Physics by Minimizing the Action
+## Nature's Cost Function: Simulating Physics by Minimizing the Action
 
 Tim Strang, Isabella Caruso, and Sam Greydanus | 2023 | MIT License
 [Blog post]() | [Paper]() | [Colab notebook]()
