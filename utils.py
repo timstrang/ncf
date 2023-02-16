@@ -1,4 +1,5 @@
-# Simulation as Optimization | Tim Strang and Sam Greydanus | 2023 | MIT License
+# Nature's Cost Function: Simulating Physics by Minimizing the Action
+# Tim Strang, Isabella Caruso, and Sam Greydanus | 2023 | MIT License
 
 import numpy as np
 import pandas as pd
