@@ -1,6 +1,10 @@
 ![logo.png](static/logo.png)
 
+[Blog post]() | [Paper]() | [Colab notebook]()
+
 In physics, there is a scalar function called the action which behaves like a cost function. When minimized, it yields the "path of least action" which represents the path a physical system will take through space and time. This function is crucial in theoretical physics and is usually minimized analytically to obtain equations of motion for various problems. In this paper, we propose a different approach: instead of minimizing the action analytically, we discretize it and then minimize it directly with gradient descent. We use this approach to obtain dynamics for six different physical systems and show that they are nearly identical to ground-truth dynamics. We discuss failure modes such as the unconstrained energy effect and show how to address them. Finally, we use the discretized action to construct a simple but novel quantum simulation.
+
+![hero.png](static/hero.png)
 
 ## How to run
 
@@ -8,7 +12,7 @@ In physics, there is a scalar function called the action which behaves like a co
 * Reproduce paper figures: `paper_figures.ipnyb` (located in this directory)
 
 
-## Simulations
+## Six Experiments
 Core physics code can be found in `core_physics.py`.
 
 * Free body
@@ -26,6 +30,12 @@ Core physics code can be found in `core_physics.py`.
 	* One year of orbital data for the sun and the inner planets of the solar system
 	* Orbits are projected onto a 2D plane
 
+![results.png](static/results.png)
+
+## Quantum simulation
+Code for our quantum experiments can be found in `quantum.py`.
+
+![quantum.png](static/quantum.png)
 
 ## Depedencies
 
